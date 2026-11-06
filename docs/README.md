@@ -1,17 +1,4 @@
-graph TD
-    Q["🔍 Zapytanie: Półprzewodniki i AI"]
 
-    Q --> NVDA["🏢 NVIDIA - Bardzo dobra"]
-    Q --> TSMC["🏢 TSMC - Stabilna"]
-    Q --> ASML["🏢 ASML - Umiarkowana"]
-
-    NVDA --- AMD["🏢 AMD - Konkurent"]
-
-    NVDA -->|Klient produkcji| TSMC
-    TSMC -->|Kupuje maszyny| ASML
-
-    NVDA --- H100["📦 Produkt: B200 i H100"]
-    ASML --- EUV["📦 Technologia: Maszyny EUV"]
 ### Makieta Interfejsu Użytkownika (UI Wireframe)
 Widok podziału ekranu: po lewej stronie interaktywny graf relacji, po prawej generowany raport podsumowujący kondycję wybranej spółki.
 
