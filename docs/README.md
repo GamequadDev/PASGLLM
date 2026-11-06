@@ -1,20 +1,17 @@
-flowchart TD
-    Q[Zapytanie: Polprzewodniki i AI]
-    NVDA[NVIDIA - Bardzo dobra]
-    TSMC[TSMC - Stabilna]
-    ASML[ASML - Umiarkowana]
-    AMD[AMD - Wzrostowa]
-    H100[Produkt: B200 i H100]
-    EUV[Technologia: Maszyny EUV]
+graph TD
+    Q["🔍 Zapytanie: Półprzewodniki i AI"]
 
-    Q --> NVDA
-    Q --> TSMC
-    Q --> ASML
-    NVDA --- AMD
-    NVDA --> TSMC
-    TSMC --> ASML
-    NVDA --- H100
-    ASML --- EUV
+    Q --> NVDA["🏢 NVIDIA - Bardzo dobra"]
+    Q --> TSMC["🏢 TSMC - Stabilna"]
+    Q --> ASML["🏢 ASML - Umiarkowana"]
+
+    NVDA --- AMD["🏢 AMD - Konkurent"]
+
+    NVDA -->|Klient produkcji| TSMC
+    TSMC -->|Kupuje maszyny| ASML
+
+    NVDA --- H100["📦 Produkt: B200 i H100"]
+    ASML --- EUV["📦 Technologia: Maszyny EUV"]
 ### Makieta Interfejsu Użytkownika (UI Wireframe)
 Widok podziału ekranu: po lewej stronie interaktywny graf relacji, po prawej generowany raport podsumowujący kondycję wybranej spółki.
 
