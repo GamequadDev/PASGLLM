@@ -1,0 +1,46 @@
+#Koncepcja Wizualizacji Danych (Knowledge Graph)
+#Aplikacja mapuje powiązania rynkowe, technologiczne oraz kondycję spółek w formie grafu wiedzy
+
+┌────────────────────────────────────────────────────────┐
+       │         🔍 WYSZUKIWANIE: PÓŁPRZEWODNIKI & AI           │
+       └───────────────────────────┬────────────────────────────┘
+                                   │
+         ┌─────────────────────────┼────────────────────────┐
+         ▼                         ▼                        ▼
+  ┌──────────────┐          ┌──────────────┐         ┌──────────────┐
+  │ 🏢 ASML      │          │ 🏢 TSMC      │         │ 🏢 AMD       │
+  │ Kondycja: 🟡 │          │ Kondycja: 🟢 │         │ Kondycja: 🟢 │
+  └──────┬───────┘          └──────▲───────┘         └──────▲───────┘
+         │ [Dostawca maszyn]       │ [Produkcja chipów]     │ [Główny konkurent]
+         └─────────────────────────┼────────────────────────┘
+                                   │
+                            ┌──────┴───────┐
+                            │  🏢 NVIDIA   │
+                            │ Kondycja: 🟢 │
+                            └──────┬───────┘
+                                   │ [Kluczowy produkt]
+                                   ▼
+                       ┌──────────────────────┐
+                       │ 📦 B200 / H100 (GPU) │
+                       │ Udział: ~80% rynku   │
+                       └──────────────────────┘
+flowchart TD
+    Q[🔍 Zapytanie: Polprzewodniki i AI]
+
+    NVDA[NVIDIA - Kondycja: Bardzo dobra / P/E: 42.1]
+    TSMC[TSMC - Kondycja: Stabilna / P/E: 24.3]
+    ASML[ASML - Kondycja: Umiarkowana / P/E: 38.0]
+    AMD[AMD - Kondycja: Wzrostowa / P/E: 55.4]
+
+    H100(Produkt: B200 i H100 - Akceleratory AI)
+    EUV(Technologia: Maszyny litograficzne High-NA EUV)
+
+    Q -->|Wyszukany segment| NVDA
+    Q -->|Wyszukany segment| TSMC
+    Q -->|Wyszukany segment| ASML
+
+    NVDA <-->|Glowny konkurent| AMD
+    NVDA -->|Klient produkcji chipow| TSMC
+    TSMC -->|Kupuje maszyny| ASML
+    NVDA --- H100
+    ASML --- EUV
