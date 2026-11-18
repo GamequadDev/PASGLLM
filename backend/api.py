@@ -2,29 +2,59 @@ from fastapi import APIRouter, Query, HTTPException
 from typing import List
 from market_data import fetch_stock_data, MarketDataError
 from graph_engine import StockGraph, CompanyNode, RelationEdge
+from database import init_db, SessionLocal, CompanyDB, RelationDB, ProductDB
 
 router = APIRouter(prefix="/api")
 graph = StockGraph()
 
-def seed_mock_data():
-    companies = [
-        CompanyNode(ticker="NVDA", name="NVIDIA Corp.", sector="Półprzewodniki", market="US", score=9.2, products=["GPU", "Układy AI"]),
-        CompanyNode(ticker="TSM", name="TSMC", sector="Półprzewodniki", market="US", score=8.8, products=["Wafery krzemowe", "Litografia"]),
-        CompanyNode(ticker="ASML", name="ASML Holding", sector="Półprzewodniki", market="US", score=8.5, products=["Maszyny EUV"]),
-        CompanyNode(ticker="AMD", name="Advanced Micro Devices", sector="Półprzewodniki", market="US", score=8.4, products=["GPU", "Procesory serwerowe"]),
-    ]
-    for c in companies:
-        graph.add_company(c)
+def init_and_load_graph():
+    init_db()
+    db = SessionLocal()
+    try:
+        if db.query(CompanyDB).count() == 0:
+            db.add_all([
+                CompanyDB(ticker="NVDA", name="NVIDIA Corp.", sector="Półprzewodniki", market="US", score=9.2),
+                CompanyDB(ticker="TSM", name="TSMC", sector="Półprzewodniki", market="US", score=8.8),
+                CompanyDB(ticker="ASML", name="ASML Holding", sector="Półprzewodniki", market="US", score=8.5),
+                CompanyDB(ticker="AMD", name="Advanced Micro Devices", sector="Półprzewodniki", market="US", score=8.4),
+            ])
+            db.add_all([
+                ProductDB(company_ticker="NVDA", name="GPU", revenue_share_pct=85.0),
+                ProductDB(company_ticker="NVDA", name="Układy AI"),
+                ProductDB(company_ticker="TSM", name="Wafery krzemowe", revenue_share_pct=90.0),
+                ProductDB(company_ticker="TSM", name="Litografia"),
+                ProductDB(company_ticker="ASML", name="Maszyny EUV", revenue_share_pct=75.0),
+                ProductDB(company_ticker="AMD", name="GPU", revenue_share_pct=70.0),
+                ProductDB(company_ticker="AMD", name="Procesory serwerowe"),
+            ])
+            db.add_all([
+                RelationDB(source_ticker="ASML", target_ticker="TSM", relation_type="DOSTAWCA", description="Dostarcza systemy litografii EUV"),
+                RelationDB(source_ticker="TSM", target_ticker="NVDA", relation_type="DOSTAWCA", description="Produkuje układy GPU dla NVIDIA"),
+                RelationDB(source_ticker="NVDA", target_ticker="AMD", relation_type="KONKURENT", description="Główny konkurent w segmencie GPU i AI"),
+            ])
+            db.commit()
 
-    relations = [
-        RelationEdge(source="ASML", target="TSM", relation_type="DOSTAWCA", description="Dostarcza systemy litografii EUV"),
-        RelationEdge(source="TSM", target="NVDA", relation_type="DOSTAWCA", description="Produkuje układy GPU dla NVIDIA"),
-        RelationEdge(source="NVDA", target="AMD", relation_type="KONKURENT", description="Główny konkurent w segmencie GPU i AI"),
-    ]
-    for r in relations:
-        graph.add_relation(r)
+        for c in db.query(CompanyDB).all():
+            graph.add_company(CompanyNode(
+                ticker=c.ticker,
+                name=c.name,
+                sector=c.sector,
+                market=c.market,
+                score=c.score,
+                products=[p.name for p in c.products]
+            ))
+        for r in db.query(RelationDB).all():
+            graph.add_relation(RelationEdge(
+                source=r.source_ticker,
+                target=r.target_ticker,
+                relation_type=r.relation_type,
+                weight=r.weight,
+                description=r.description
+            ))
+    finally:
+        db.close()
 
-seed_mock_data()
+init_and_load_graph()
 
 @router.get("/scenario1/search")
 def search_by_phrase(phrase: str = Query(..., description="Np. półprzewodniki")):

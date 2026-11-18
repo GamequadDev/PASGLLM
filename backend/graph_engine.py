@@ -32,7 +32,6 @@ class StockGraph:
             self.adj_list[edge.source].append(edge)
 
     def search_and_sort_by_phrase(self, phrase: str) -> List[CompanyNode]:
-        """Scenariusz 1: Wyszukiwanie spółek po frazie (sektor/produkty) i sortowanie malejąco wg oceny."""
         phrase_lower = phrase.lower()
         matched = [
             node for node in self.nodes.values()
@@ -42,7 +41,6 @@ class StockGraph:
         return sorted(matched, key=lambda x: x.score, reverse=True)
 
     def find_connection_path(self, start_ticker: str, end_ticker: str) -> Optional[List[str]]:
-        """Scenariusz 2: Algorytm BFS szukający ścieżki powiązań między dwiema spółkami."""
         if start_ticker not in self.nodes or end_ticker not in self.nodes:
             return None
 
@@ -63,7 +61,6 @@ class StockGraph:
         return None
 
     def get_subgraph_for_tickers(self, tickers: List[str]) -> Dict[str, Any]:
-        """Zwraca wycinek grafu (węzły i krawędzie) do wizualizacji."""
         ticker_set = set(tickers)
         sub_nodes = [self.nodes[t] for t in tickers if t in self.nodes]
         sub_edges = [
