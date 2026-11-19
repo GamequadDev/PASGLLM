@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Query, HTTPException
 from typing import List
-from market_data import fetch_stock_data, MarketDataError
+from data.market_data import fetch_stock_data, MarketDataError
 from graph_engine import StockGraph, CompanyNode, RelationEdge
 from database import init_db, SessionLocal, CompanyDB, RelationDB, ProductDB
 
