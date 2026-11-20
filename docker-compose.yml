@@ -1,4 +1,18 @@
 services:
+  backend:
+    build: ./backend
+    environment:
+      DATABASE_URL: postgresql+psycopg2://pasgllm:pasgllm_password@postgres:5432/pasgllm_db
+      OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://ollama:11434}
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-qwen3.5:9b-q4_K_M}
+      OLLAMA_TIMEOUT_SECONDS: ${OLLAMA_TIMEOUT_SECONDS:-120}
+      SEC_USER_AGENT: ${SEC_USER_AGENT:-}
+    ports:
+      - "127.0.0.1:8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
   postgres:
     image: postgres:16-alpine
     container_name: pasgllm_postgres
@@ -11,6 +25,11 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\""]
+      interval: 5s
+      timeout: 3s
+      retries: 10
 
   neo4j:
     image: neo4j:5-community
@@ -24,6 +43,20 @@ services:
     volumes:
       - neo4j_data:/data
 
+  ollama:
+    image: ollama/ollama
+    profiles: [local-llm]
+    environment:
+      OLLAMA_NO_CLOUD: "1"
+    volumes:
+      - ollama_data:/root/.ollama
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
 volumes:
   postgres_data:
   neo4j_data:
+  ollama_data:

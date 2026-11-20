@@ -1,8 +1,11 @@
-from fastapi import APIRouter, Query, HTTPException
+from fastapi import APIRouter, Query, HTTPException, Response
 from typing import List
+from data.edgar import CompanyFiling, EdgarError, EdgarNotFound, download_annual_filing, fetch_annual_filings
 from data.market_data import fetch_stock_data, MarketDataError
 from graph_engine import StockGraph, CompanyNode, RelationEdge
 from database import init_db, SessionLocal, CompanyDB, RelationDB, ProductDB
+from local_model import LocalModelResponseError, LocalModelTimeout, LocalModelUnavailable
+from workflows.company_report import CompanyAnalysisResponse, company_report_workflow
 
 router = APIRouter(prefix="/api")
 graph = StockGraph()
@@ -105,3 +108,49 @@ def get_company_report(ticker: str):
         "graph_profile": node,
         "market_data": financials
     }
+
+
+@router.get("/company/{ticker}/filings")
+def list_company_filings(ticker: str, limit: int = Query(default=5, ge=1, le=20)) -> list[CompanyFiling]:
+    """List recent annual 10-K and 20-F filings from SEC EDGAR."""
+    try:
+        return fetch_annual_filings(ticker, limit)
+    except EdgarNotFound as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except EdgarError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+
+
+@router.get(
+    "/company/{ticker}/filings/download",
+    response_class=Response,
+    responses={200: {"content": {"application/octet-stream": {"schema": {"type": "string", "format": "binary"}}}}},
+)
+def download_company_filing(ticker: str, accession_number: str | None = None) -> Response:
+    """Download a specific annual filing or the latest one if no accession number is provided."""
+    try:
+        filing, document = download_annual_filing(ticker, accession_number)
+    except EdgarNotFound as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except EdgarError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+    return Response(
+        content=document,
+        media_type="application/octet-stream",
+        headers={"Content-Disposition": f'attachment; filename="{filing.primary_document}"'},
+    )
+
+
+@router.post("/company/{ticker}/analysis", response_model=CompanyAnalysisResponse)
+def generate_company_report(ticker: str) -> CompanyAnalysisResponse:
+    """Generate a company analysis in Polish using the local model."""
+    try:
+        return company_report_workflow.invoke({"ticker": ticker})["report"]
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except (MarketDataError, LocalModelResponseError) as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+    except LocalModelUnavailable as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+    except LocalModelTimeout as exc:
+        raise HTTPException(status_code=504, detail=str(exc)) from exc
