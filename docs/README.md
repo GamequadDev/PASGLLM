@@ -4,9 +4,9 @@
 ## Wygląd strony
 ![Wygląd strony](wyglad_strony.png)
 
-## Wykres 1
+## Graf sprężynowy (działanie fizyki)
 ![Wykres 1](graf1.png)
 
-## Wykres 2
+## Wykres kołowy
 ![Wykres 2](graf2.png)
 
