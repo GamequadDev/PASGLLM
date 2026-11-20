@@ -10,5 +10,3 @@
 ## Wykres 2
 ![Wykres 2](graf2.png)
 
-## Kod wykresów
-[Zobacz plik graf_kod](graf_kod)
